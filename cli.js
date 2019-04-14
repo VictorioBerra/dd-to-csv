@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const Promise = require('bluebird');
 const bhttp = require('bhttp');
 const cheerio = require('cheerio');
