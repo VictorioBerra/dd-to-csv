@@ -25,7 +25,8 @@
     "bluebird": "^3.5.4",
     "cheerio": "^1.0.0-rc.3",
     "commander": "^2.20.0",
-    "convert-array-to-csv": "^1.0.6"
+    "convert-array-to-csv": "^1.0.6",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "eslint": "^5.16.0",

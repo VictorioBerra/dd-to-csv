@@ -1,28 +1,38 @@
-const Promise = require("bluebird");
-const bhttp = require("bhttp");
+const Promise = require('bluebird');
+const bhttp = require('bhttp');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
+const winston = require('winston');
 const {
     convertArrayToCSV
 } = require('convert-array-to-csv');
 var program = require('commander');
 
-program
-  .version('0.1.0')
-  .option('-o, --output <path>', 'csv output path');
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    defaultMeta: { service: 'main' },
+    transports: [
+        new winston.transports.Console()
+    ]
+});
 
-var rowPromises = [
-    GetRowsFromPage("https://dividenddetective.com/big_dividend_list.htm", "#xr_mvp_5 > div > div:nth-child(36) > .xr_tl"),
-    GetRowsFromPage("https://dividenddetective.com/big_dividend_list2.htm", "#xr_mvp_15 > div > div:nth-child(41) > .xr_tl"),
-    GetRowsFromPage("https://dividenddetective.com/big_dividend_list3.htm", "#xr_mvp_1 > div > div:nth-child(38) > .xr_tl"),
-    GetRowsFromPage("https://dividenddetective.com/big_dividend_list4.htm", "#xr_mvp_3 > div > div:nth-child(35) > .xr_tl")
+program
+    .version('0.1.0')
+    .option('-o, --output <path>', 'csv output path');
+
+const rowPromises = [
+    GetRowsFromPage('https://dividenddetective.com/big_dividend_list.htm', '#xr_mvp_5 > div > div:nth-child(36) > .xr_tl'),
+    GetRowsFromPage('https://dividenddetective.com/big_dividend_list2.htm', '#xr_mvp_15 > div > div:nth-child(41) > .xr_tl'),
+    GetRowsFromPage('https://dividenddetective.com/big_dividend_list3.htm', '#xr_mvp_1 > div > div:nth-child(38) > .xr_tl'),
+    GetRowsFromPage('https://dividenddetective.com/big_dividend_list4.htm', '#xr_mvp_3 > div > div:nth-child(35) > .xr_tl')
 ];
 
 const header = ['Ticker', 'Company Name', 'Annual Div', 'Div Yield'];
 
 Promise.reduce(rowPromises,
-    function (accumulator, rows, index, length) {
+    function (accumulator, rows) {
         accumulator.push(rows);
         return accumulator;
     },
@@ -33,16 +43,18 @@ Promise.reduce(rowPromises,
         separator: ','
     });
 
-    var file_name = './dividenddetective-output-' + getFormattedTime() +'.csv'
+    let file_name = './dividenddetective-output-' + getFormattedTime() + '.csv';
+    let outputDirectory = program.output || './';
+    let pathToFile = path.join(outputDirectory, file_name);
 
-    var outputDirectory = program.output || "./";
-
-    fs.writeFile(path.join(outputDirectory, file_name), csvFromArrayOfArrays, function(err) {
-        if(err) {
-            return console.log(err);
+    fs.writeFile(pathToFile, csvFromArrayOfArrays, function (err) {
+        if (err) {
+            logger.error('Failed to write file.');
+            logger.error(err);
         }
-        console.log("CSV successfully saved.");
-    }); 
+        logger.info(`CSV successfully saved ${rows.flat().length} total rows to ${pathToFile}`);
+
+    });
 });
 
 function GetRowsFromPage(url, selector) {
@@ -51,28 +63,29 @@ function GetRowsFromPage(url, selector) {
     }).then(function (response) {
         return cheerio.load(response.body.toString());
     }).then(function ($) {
-        var allFields = $(selector);
-        var rows = [];
+        let allFields = $(selector);
+        let rows = [];
         for (var i = 0; i < allFields.length; i += 4) {
-            var row = [];
+            let row = [];
             for (var j = 0; j < 4; j++) {
-                var currentField = allFields.eq([i + j]).text();
+                let currentField = allFields.eq([i + j]).text();
                 row.push(currentField);
             }
             rows.push(row);
         }
+        logger.info(`Fetched ${rows.length} rows from ${url}`);
         return rows;
     });
 }
 
 function getFormattedTime() {
-    var today = new Date();
-    var y = today.getFullYear();
+    const today = new Date();
+    const y = today.getFullYear();
     // JavaScript months are 0-based.
-    var m = today.getMonth() + 1;
-    var d = today.getDate();
-    var h = today.getHours();
-    var mi = today.getMinutes();
-    var s = today.getSeconds();
-    return y + "-" + m + "-" + d + "-" + h + "-" + mi + "-" + s;
+    const m = today.getMonth() + 1;
+    const d = today.getDate();
+    const h = today.getHours();
+    const mi = today.getMinutes();
+    const s = today.getSeconds();
+    return y + '-' + m + '-' + d + '-' + h + '-' + mi + '-' + s;
 }
