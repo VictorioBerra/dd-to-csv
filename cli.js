@@ -2,9 +2,15 @@ const Promise = require("bluebird");
 const bhttp = require("bhttp");
 const cheerio = require('cheerio');
 const fs = require('fs');
+const path = require('path');
 const {
     convertArrayToCSV
 } = require('convert-array-to-csv');
+var program = require('commander');
+
+program
+  .version('0.1.0')
+  .option('-o, --output <path>', 'csv output path');
 
 var rowPromises = [
     GetRowsFromPage("https://dividenddetective.com/big_dividend_list.htm", "#xr_mvp_5 > div > div:nth-child(36) > .xr_tl"),
@@ -27,10 +33,11 @@ Promise.reduce(rowPromises,
         separator: ','
     });
 
-    var now = new Date();
     var file_name = './dividenddetective-output-' + getFormattedTime() +'.csv'
 
-    fs.writeFile(file_name, csvFromArrayOfArrays, function(err) {
+    var outputDirectory = program.output || "./";
+
+    fs.writeFile(path.join(outputDirectory, file_name), csvFromArrayOfArrays, function(err) {
         if(err) {
             return console.log(err);
         }
@@ -54,7 +61,6 @@ function GetRowsFromPage(url, selector) {
             }
             rows.push(row);
         }
-        console.log(rows);
         return rows;
     });
 }
