@@ -1,0 +1,34 @@
+{
+  "name": "dd-to-csv",
+  "version": "1.0.0",
+  "description": "A command line utility to pull the tables from dd down to a csv",
+  "main": "cli.js",
+  "bin": {
+    "ddtocsv": "./cli.js"
+  },
+  "scripts": {
+    "nodemon": "nodemon . --exec \"npm run start\"",
+    "start": "node cli.js",
+    "pretest": "eslint .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postversion": "git push && git push --tags && npm publish"
+  },
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VictorioBerra/dd-to-csv.git"
+  },
+  "author": "Victorio Berra",
+  "license": "ISC",
+  "dependencies": {
+    "bhttp": "^1.2.4",
+    "bluebird": "^3.5.4",
+    "cheerio": "^1.0.0-rc.3",
+    "commander": "^2.20.0",
+    "convert-array-to-csv": "^1.0.6"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "nodemon": "^1.18.11"
+  }
+}
